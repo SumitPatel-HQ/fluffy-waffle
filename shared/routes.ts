@@ -15,6 +15,12 @@ export const api = {
       },
     },
   },
+  handbook: {
+    exportPdf: {
+      method: "GET" as const,
+      path: "/api/handbook/export" as const,
+    },
+  },
 };
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {

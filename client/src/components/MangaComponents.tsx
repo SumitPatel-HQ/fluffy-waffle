@@ -1,10 +1,15 @@
-import React from 'react';
+import React from "react";
 
 // ==========================================
 // MANGA LAYOUT COMPONENTS
 // ==========================================
 
-export const MangaPage = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
+type MangaPageProps = React.HTMLAttributes<HTMLDivElement> & {
+  children: React.ReactNode;
+  className?: string;
+};
+
+export const MangaPage = ({ children, className = "", ...props }: MangaPageProps) => {
   return (
     <div className={`
       manga-page-wrapper
@@ -13,30 +18,38 @@ export const MangaPage = ({ children, className = '' }: { children: React.ReactN
       mb-12 manga-shadow-lg flex flex-col gap-4
       relative overflow-hidden
       ${className}
-    `}>
+    `} {...props}>
       {children}
     </div>
   );
 };
 
-export const MangaPanel = ({ 
-  children, 
-  className = '',
-  screentone = 'none',
-  angled = false
-}: { 
-  children: React.ReactNode, 
-  className?: string,
-  screentone?: 'none' | 'light' | 'dense' | 'red' | 'burst',
-  angled?: boolean
-}) => {
+type MangaPanelProps = React.HTMLAttributes<HTMLDivElement> & {
+  children: React.ReactNode;
+  className?: string;
+  screentone?: "none" | "light" | "dense" | "red" | "burst";
+  angled?: boolean;
+};
+
+export const MangaPanel = ({
+  children,
+  className = "",
+  screentone = "none",
+  angled = false,
+  ...props
+}: MangaPanelProps) => {
   const getScreentoneClass = () => {
-    switch(screentone) {
-      case 'light': return 'screentone-dots-light';
-      case 'dense': return 'screentone-dots-dense';
-      case 'red': return 'screentone-dots-red';
-      case 'burst': return 'speed-lines-burst opacity-10';
-      default: return 'bg-white';
+    switch (screentone) {
+      case "light":
+        return "screentone-dots-light";
+      case "dense":
+        return "screentone-dots-dense";
+      case "red":
+        return "screentone-dots-red";
+      case "burst":
+        return "speed-lines-burst opacity-10";
+      default:
+        return "bg-white";
     }
   };
 
@@ -46,7 +59,7 @@ export const MangaPanel = ({
       ${getScreentoneClass()}
       ${angled ? '-rotate-1 hover:rotate-0 transition-transform duration-300' : ''}
       ${className}
-    `}>
+    `} {...props}>
       <div className="relative z-10 w-full h-full flex flex-col">
         {children}
       </div>
