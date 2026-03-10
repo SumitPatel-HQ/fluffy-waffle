@@ -143,13 +143,8 @@ export default function Handbook() {
 
       {/* PAGE 3: RULES 1-4 */}
       <MangaPage>
-        <div className="grid grid-cols-2 grid-rows-[auto_1fr_1fr] gap-3 h-full">
+        <div className="grid grid-cols-2 grid-rows-2 gap-3 h-full">
           
-          {/* Header row */}
-          <div className="col-span-2 pb-2 border-b-8 border-black">
-            <h2 className="font-display text-5xl tracking-widest">CHAPTER 1: THE FOUNDATION</h2>
-          </div>
-
           {/* Rule 1 - Wide */}
           <MangaPanel className="col-span-2 p-5" angled>
             <div className="flex items-start gap-4">
@@ -202,12 +197,6 @@ export default function Handbook() {
       <MangaPage>
         <div className="grid grid-cols-3 grid-rows-3 gap-3 h-full">
           
-          {/* Header */}
-          <div className="col-span-3 pb-2 border-b-8 border-black flex items-center justify-between">
-            <h2 className="font-display text-5xl tracking-widest">CHAPTER 2: THE GRIND</h2>
-            <Sword size={40} className="text-black" />
-          </div>
-
           {/* Rule 5 - Tall Left */}
           <MangaPanel className="col-span-1 row-span-3 p-4 bg-yellow-400">
             <div className="flex flex-col h-full">
@@ -256,13 +245,8 @@ export default function Handbook() {
 
       {/* PAGE 5: RULES 9-11 */}
       <MangaPage>
-        <div className="grid grid-cols-2 grid-rows-[auto_1fr_1fr_1fr] gap-4 h-full">
+        <div className="grid grid-cols-2 grid-rows-3 gap-4 h-full">
           
-          {/* Header */}
-          <div className="col-span-2 pb-2 border-b-8 border-black">
-            <h2 className="font-display text-5xl tracking-widest text-right">CHAPTER 3: FINAL JUDGMENT</h2>
-          </div>
-
           {/* Rule 9 */}
           <MangaPanel className="col-span-2 p-5">
             <div className="flex gap-6 items-center">
