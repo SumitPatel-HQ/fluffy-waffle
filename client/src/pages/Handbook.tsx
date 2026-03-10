@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Download, AlertTriangle, Zap, Printer } from "lucide-react";
+import { Download, AlertTriangle, Printer } from "lucide-react";
 import domainRulesMd from "@assets/hackathon_domain_rules.md?raw";
 import {
   MangaPage,
@@ -424,7 +424,7 @@ export default function Handbook() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
-              {[generalRules[1], generalRules[3]].map((rule, columnIndex) => (
+              {[generalRules[1], generalRules[3]].map((rule) => (
                 <MangaPanel key={rule.id} className="rounded-[10px] p-6" id={rule.id}>
                   <div className="absolute top-4 right-4 h-14 w-14 rounded-full screentone-dots-light opacity-70" />
                   <div className="flex items-start gap-4 mb-3">
@@ -434,11 +434,6 @@ export default function Handbook() {
                     <h3 className="font-display text-3xl text-red-600">{rule.title}</h3>
                   </div>
                   <p className="font-bold text-lg leading-7 text-black">{rule.content}</p>
-                  {columnIndex === 0 && (
-                    <div className="absolute bottom-4 right-4 text-yellow-500">
-                      <Zap size={34} strokeWidth={2.8} />
-                    </div>
-                  )}
                 </MangaPanel>
               ))}
             </div>
