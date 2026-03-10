@@ -19,6 +19,13 @@ export const MangaPage = ({ children, className = "", ...props }: MangaPageProps
       relative overflow-hidden
       ${className}
     `} {...props}>
+      {/* Manga-style inner decorative border */}
+      <div className="absolute inset-0 m-[10px] border-[3px] border-black pointer-events-none z-20" />
+      {/* Corner accent marks */}
+      <div className="absolute top-[6px] left-[6px] w-5 h-5 border-t-[4px] border-l-[4px] border-black pointer-events-none z-20" />
+      <div className="absolute top-[6px] right-[6px] w-5 h-5 border-t-[4px] border-r-[4px] border-black pointer-events-none z-20" />
+      <div className="absolute bottom-[6px] left-[6px] w-5 h-5 border-b-[4px] border-l-[4px] border-black pointer-events-none z-20" />
+      <div className="absolute bottom-[6px] right-[6px] w-5 h-5 border-b-[4px] border-r-[4px] border-black pointer-events-none z-20" />
       {children}
     </div>
   );

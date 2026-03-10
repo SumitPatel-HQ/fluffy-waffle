@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Download, AlertTriangle, Zap, Printer } from "lucide-react";
+import domainRulesMd from "@assets/hackathon_domain_rules.md?raw";
 import {
   MangaPage,
   MangaPanel,
@@ -16,13 +17,67 @@ type RuleItem = {
   fallbackPage: number;
 };
 
+type DomainSection = {
+  title: string;
+  items: string[];
+};
+
 type DomainRuleItem = {
   id: string;
   slug: string;
+  number: string;
   title: string;
-  content: string;
+  sections: DomainSection[];
   fallbackPage: number;
 };
+
+function parseDomainRules(markdown: string): DomainRuleItem[] {
+  const domains: DomainRuleItem[] = [];
+
+  // Split on level-2 headings to get per-domain blocks
+  const domainParts = markdown.split(/^## /m).slice(1);
+
+  domainParts.forEach((block, index) => {
+    const firstLine = block.split("\n")[0].trim();
+    const cleanTitle = firstLine.replace(/\*\*/g, "").replace(/\\\./g, ".").trim();
+
+    // Match "1. Agentic AI — Domain Rules" style headings
+    const match = cleanTitle.match(/^(\d+)\.\s+(.+?)(?:\s*[—-]\s*Domain Rules)?$/i);
+    if (!match) return;
+
+    const number = match[1];
+    const title = match[2].trim().toUpperCase();
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+    // Split on level-3 headings to get subsections
+    const sectionParts = block.split(/^### /m).slice(1);
+    const sections: DomainSection[] = sectionParts
+      .map((sectionBlock) => {
+        const sectionLines = sectionBlock.split("\n");
+        const sectionTitle = sectionLines[0].trim().replace(/\*\*/g, "").trim();
+        const items = sectionLines
+          .slice(1)
+          .filter((line) => /^\*\s+/.test(line.trim()))
+          .map((line) =>
+            line.trim().replace(/^\*\s+/, "").replace(/\*\*/g, "").replace(/\\\./g, ".").trim()
+          )
+          .filter((item) => item.length > 0);
+        return { title: sectionTitle, items };
+      })
+      .filter((s) => s.items.length > 0);
+
+    domains.push({
+      id: `domain-${slug}`,
+      slug,
+      number,
+      title,
+      sections,
+      fallbackPage: 6 + index,
+    });
+  });
+
+  return domains;
+}
 
 type TocEntry = {
   anchorId: string;
@@ -43,7 +98,7 @@ const generalRules: RuleItem[] = [
     title: "REGISTRATION & ELIGIBILITY",
     fallbackPage: 3,
     content:
-      "All hackers must be officially registered before the deadline — late registrations will NOT be accepted. Teams can have up to 4 members. Each participant can join only one team and one domain. Team composition is locked once the event starts.",
+      "All hackers must be officially registered before the deadline Through Web Portal — late registrations will NOT be accepted. Each participant can join only one team and one domain. Team composition is locked once the event starts.",
   },
   {
     id: "general-02",
@@ -127,32 +182,7 @@ const generalRules: RuleItem[] = [
   },
 ];
 
-const domainRules: DomainRuleItem[] = [
-  {
-    id: "domain-ai-ml",
-    slug: "ai-ml",
-    title: "AI/ML TRACK RULES",
-    fallbackPage: 6,
-    content:
-      "Include model transparency in your README: dataset source, assumptions, and limitations. If using external models, document model name/version and safety considerations.",
-  },
-  {
-    id: "domain-web-app",
-    slug: "web-app",
-    title: "WEB / APP TRACK RULES",
-    fallbackPage: 6,
-    content:
-      "Your project must have an accessible UI and clear user flow. Share deployment URL and setup instructions. Broken authentication or non-functional primary flow can reduce score heavily.",
-  },
-  {
-    id: "domain-cybersecurity",
-    slug: "cybersecurity",
-    title: "CYBERSECURITY TRACK RULES",
-    fallbackPage: 6,
-    content:
-      "Testing must remain inside approved environments and challenge scope. No real-world target probing is allowed. Provide threat model, exploit path, and remediation details.",
-  },
-];
+
 
 function getSearchParams(): URLSearchParams {
   if (typeof window === "undefined") {
@@ -169,13 +199,12 @@ export default function Handbook() {
   const [isExporting, setIsExporting] = useState(false);
   const [pageNumbers, setPageNumbers] = useState<Record<string, number>>({});
 
-  const visibleDomainRules = useMemo(() => {
-    if (!selectedDomain) {
-      return domainRules;
-    }
+  const allDomainRules = useMemo(() => parseDomainRules(domainRulesMd), []);
 
-    return domainRules.filter((rule) => rule.slug === selectedDomain);
-  }, [selectedDomain]);
+  const visibleDomainRules = useMemo(() => {
+    if (!selectedDomain) return allDomainRules;
+    return allDomainRules.filter((rule) => rule.slug === selectedDomain);
+  }, [selectedDomain, allDomainRules]);
 
   const tocEntries = useMemo<TocEntry[]>(() => {
     const generalEntries = generalRules.map((rule) => ({
@@ -184,9 +213,9 @@ export default function Handbook() {
       fallbackPage: rule.fallbackPage,
     }));
 
-    const domainEntries = visibleDomainRules.map((rule, index) => ({
+    const domainEntries = visibleDomainRules.map((rule) => ({
       anchorId: rule.id,
-      label: `${index + 1}. ${rule.title}`,
+      label: `${rule.number}. ${rule.title}`,
       fallbackPage: rule.fallbackPage,
     }));
 
@@ -282,25 +311,20 @@ export default function Handbook() {
 
       <MangaPage className="screentone-dots-light">
         <div className="flex-1 flex flex-col justify-between">
-          <div className="pt-8 pb-4 z-10">
-            <MangaHeader text="HACKATHON" subtitle="GLOBAL PARTICIPANT RULES" />
-            <div className="text-center mt-2">
-              <span className="font-display text-8xl text-red-600 text-shadow-solid text-stroke-black block transform rotate-2">
-                2026
-              </span>
-            </div>
+          <div className="pt-6 pb-2 z-10">
+            <MangaHeader text="HACKATHON" subtitle="rules and regulations" />
           </div>
 
-          <MangaPanel className="flex-1 my-4 p-2 bg-black" angled>
+          <MangaPanel className="flex-1 my-2 p-2 bg-black min-h-[620px] sm:min-h-[680px]" angled>
             <div className="w-full h-full relative border-4 border-white bg-zinc-900 overflow-hidden">
               <img
                 src="/TechblitzPoster.png"
                 alt="Hackathon Hero"
-                className="absolute inset-0 w-full h-full object-cover object-[center_33%]"
+                className="absolute inset-0 w-full h-full object-cover object-[center_40%]"
               />
               <div className="absolute inset-0 screentone-dots-light mix-blend-overlay"></div>
             </div>
-            <SpeechBubble text="READ CAREFULLY!" position="bottom-right" className="-mr-8 -mb-8" />
+            <SpeechBubble text="READ CAREFULLY!" position="bottom-right" className="-mr-8 -mb-8 bottom-5 right-0" />
           </MangaPanel>
 
           <div className="text-center z-10 pb-4">
@@ -342,13 +366,13 @@ export default function Handbook() {
 
             <h3 className="font-display text-2xl text-red-600 mb-3">02. DOMAIN RULES</h3>
             <ul className="space-y-2 font-bold text-base">
-              {visibleDomainRules.map((rule, index) => (
+              {visibleDomainRules.map((rule) => (
                 <li key={rule.id}>
                   <a
                     href={`#${rule.id}`}
                     className="flex justify-between border-b-2 border-dashed border-black/30 pb-1 hover:text-red-600"
                   >
-                    <span>{`${index + 1}. ${rule.title}`}</span>
+                    <span>{`${rule.number}. ${rule.title}`}</span>
                     <span className="font-display text-red-600 text-xl">
                       PG.{pageNumbers[rule.id] ?? rule.fallbackPage}
                     </span>
@@ -381,35 +405,59 @@ export default function Handbook() {
           BACK TO MISSION LOG
         </a>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 md:[grid-auto-flow:dense] auto-rows-[minmax(140px,auto)] gap-6 content-start mt-2">
-          {generalRules.slice(0, 5).map((rule, index) => (
-            <MangaPanel
-              key={rule.id}
-              className={`${index === 0 ? "md:col-span-2" : ""} h-fit rounded-[10px] p-6`}
-              id={rule.id}
-            >
-              <div className="absolute top-4 right-4 h-14 w-14 rounded-full screentone-dots-light opacity-70" />
-              <div className="flex items-start gap-4 mb-3">
-                <span className="font-display text-6xl leading-none text-stroke-black text-shadow-solid text-white">
-                  {rule.code}
-                </span>
-                <h3 className="font-display text-3xl text-red-600">{rule.title}</h3>
-              </div>
-              <p className="font-bold text-lg leading-7 text-black">{rule.content}</p>
-              {index === 0 && (
-                <SpeechBubble
-                  text="SQUAD UP!"
-                  position="top-right"
-                  className="!-top-2 !right-1 !left-auto !bottom-auto scale-[0.68] origin-top-right"
-                />
-              )}
-              {index === 1 && (
-                <div className="absolute bottom-4 right-4 text-yellow-500">
-                  <Zap size={34} strokeWidth={2.8} />
-                </div>
-              )}
-            </MangaPanel>
-          ))}
+        <div className="mt-2 space-y-6">
+          <MangaPanel className="rounded-[10px] p-6" id={generalRules[0].id}>
+            <div className="absolute top-4 right-4 h-14 w-14 rounded-full screentone-dots-light opacity-70" />
+            <div className="flex items-start gap-4 mb-3">
+              <span className="font-display text-6xl leading-none text-stroke-black text-shadow-solid text-white">
+                {generalRules[0].code}
+              </span>
+              <h3 className="font-display text-3xl text-red-600">{generalRules[0].title}</h3>
+            </div>
+            <p className="font-bold text-lg leading-7 text-black">{generalRules[0].content}</p>
+            <SpeechBubble
+              text="SQUAD UP!"
+              position="top-right"
+              className="!-top-2 !right-1 !left-auto !bottom-auto scale-[0.68] origin-top-right"
+            />
+          </MangaPanel>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              {[generalRules[1], generalRules[3]].map((rule, columnIndex) => (
+                <MangaPanel key={rule.id} className="rounded-[10px] p-6" id={rule.id}>
+                  <div className="absolute top-4 right-4 h-14 w-14 rounded-full screentone-dots-light opacity-70" />
+                  <div className="flex items-start gap-4 mb-3">
+                    <span className="font-display text-6xl leading-none text-stroke-black text-shadow-solid text-white">
+                      {rule.code}
+                    </span>
+                    <h3 className="font-display text-3xl text-red-600">{rule.title}</h3>
+                  </div>
+                  <p className="font-bold text-lg leading-7 text-black">{rule.content}</p>
+                  {columnIndex === 0 && (
+                    <div className="absolute bottom-4 right-4 text-yellow-500">
+                      <Zap size={34} strokeWidth={2.8} />
+                    </div>
+                  )}
+                </MangaPanel>
+              ))}
+            </div>
+
+            <div className="space-y-6">
+              {[generalRules[2], generalRules[4]].map((rule) => (
+                <MangaPanel key={rule.id} className="rounded-[10px] p-6" id={rule.id}>
+                  <div className="absolute top-4 right-4 h-14 w-14 rounded-full screentone-dots-light opacity-70" />
+                  <div className="flex items-start gap-4 mb-3">
+                    <span className="font-display text-6xl leading-none text-stroke-black text-shadow-solid text-white">
+                      {rule.code}
+                    </span>
+                    <h3 className="font-display text-3xl text-red-600">{rule.title}</h3>
+                  </div>
+                  <p className="font-bold text-lg leading-7 text-black">{rule.content}</p>
+                </MangaPanel>
+              ))}
+            </div>
+          </div>
         </div>
       </MangaPage>
 
@@ -443,7 +491,7 @@ export default function Handbook() {
           BACK TO MISSION LOG
         </a>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 content-start auto-rows-min mt-2">
+        <div className="grid grid-cols-1 grid-rows-2 gap-8 content-start auto-rows-min mt-2">
           {generalRules.slice(9).map((rule) => (
             <div
               key={rule.id}
@@ -462,30 +510,53 @@ export default function Handbook() {
         </div>
       </MangaPage>
 
-      {/* PAGE 6: DOMAIN RULES */}
-      <MangaPage className="screentone-dots-light">
-        <a href="#mission-log" className="font-display text-xl text-red-600 underline">
-          BACK TO MISSION LOG
-        </a>
+      {/* DOMAIN PAGES — one per domain, parsed from Markdown */}
+      {visibleDomainRules.map((domain) => (
+        <MangaPage key={domain.id} className="screentone-dots-light">
+          <a href="#mission-log" className="font-display text-xl text-red-600 underline">
+            BACK TO MISSION LOG
+          </a>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 content-start auto-rows-min mt-3">
-          {visibleDomainRules.map((rule, index) => (
-            <div
-              key={rule.id}
-              id={rule.id}
-              className="p-6 border-4 border-black rounded-xl bg-white shadow-[6px_6px_0_black] h-fit"
-            >
-              <div className="flex items-start gap-4 mb-3">
-                <span className="font-display text-5xl leading-none text-stroke-black text-shadow-solid text-white">
-                  D{index + 1}
-                </span>
-                <h3 className="font-display text-2xl text-red-600">{rule.title}</h3>
+          {/* Domain header */}
+          <div className="mt-3 mb-5" id={domain.id}>
+            <div className="flex items-start gap-4">
+              <span className="font-display text-7xl leading-none text-stroke-black text-shadow-solid text-white flex-shrink-0">
+                D{domain.number}
+              </span>
+              <div>
+                <h2 className="font-display text-3xl md:text-4xl text-red-600 leading-none">
+                  {domain.title}
+                </h2>
+                <p className="font-manga text-base bg-black text-white px-3 py-1 inline-block mt-2 transform -rotate-1">
+                  DOMAIN SPECIFIC RULES
+                </p>
               </div>
-              <p className="font-bold text-lg leading-7 text-black">{rule.content}</p>
             </div>
-          ))}
-        </div>
-      </MangaPage>
+          </div>
+
+          {/* Section cards grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 content-start auto-rows-min">
+            {domain.sections.map((section) => (
+              <div
+                key={section.title}
+                className="p-5 border-4 border-black rounded-xl bg-white shadow-[6px_6px_0_black] h-fit"
+              >
+                <h4 className="font-display text-xl text-red-600 border-b-2 border-black pb-2 mb-3">
+                  {section.title}
+                </h4>
+                <ul className="space-y-2">
+                  {section.items.map((item, i) => (
+                    <li key={i} className="flex gap-2 font-bold text-sm leading-snug">
+                      <span className="text-red-600 font-display text-base flex-shrink-0">▸</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </MangaPage>
+      ))}
 
       <MangaPage className="bg-black text-white print:bg-black">
         <div className="absolute inset-0 border-[16px] border-white m-4 pointer-events-none"></div>
@@ -499,12 +570,7 @@ export default function Handbook() {
             GOOD LUCK,<br />HACKERS!
           </h1>
 
-          <div className="mt-12 border-t-4 border-white pt-8 w-full max-w-sm mx-auto">
-            <p className="font-manga text-2xl tracking-widest">END OF VOLUME 1</p>
-            <p className="font-body font-bold text-sm mt-4 text-gray-400 uppercase tracking-widest">
-              Generated securely for Hackathon 2026
-            </p>
-          </div>
+          
         </div>
       </MangaPage>
     </div>
